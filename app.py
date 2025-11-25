@@ -1,5 +1,4 @@
 # aqua-optim-energy
-AQUA-OPTIM ENERGY - Système intelligent d'optimisation énergétique ONEA
 # Supprimez l'ancien
 del app.py
 
