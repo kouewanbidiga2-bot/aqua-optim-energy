@@ -1,6 +1,7 @@
 # aqua-optim-energy
 # Supprimez l'ancien
 # Créez le nouveau avec le code complet
+echo plotly>=5.15.0 >> requirements.txt
 import streamlit as st
 import pandas as pd
 import numpy as np
