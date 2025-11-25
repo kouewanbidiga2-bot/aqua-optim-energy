@@ -3,7 +3,7 @@
 del app.py
 
 # Créez le nouveau avec le code complet
-echo "import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
