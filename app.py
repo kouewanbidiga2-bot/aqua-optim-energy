@@ -160,9 +160,9 @@ def show_sentinel():
     for pump in pumps_data:
         col1, col2, col3 = st.columns([2, 2, 3])
         with col1:
-            st.write(f'**{pump[\"id\"]}**')
+              st.write(f"**{pump['id']}**")
         with col2:
-            st.write(f'Efficacite: {pump[\"efficiency\"]*100:.1f}%')
+              st.write(f"Efficacite: {pump['efficiency']*100:.1f}%")
         with col3:
             if pump['status'] == 'Alerte':
                 st.error('🔴 Alerte - Maintenance requise')
