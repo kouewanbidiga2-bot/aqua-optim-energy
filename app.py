@@ -176,4 +176,4 @@ def show_sentinel():
     st.info('**Systeme** - 1 anomalie detectee sur 5 pompes')
 
 if __name__ == '__main__':
-    main()" > app.py
+    main()
