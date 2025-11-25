@@ -1,7 +1,5 @@
 # aqua-optim-energy
 # Supprimez l'ancien
-del app.py
-
 # Créez le nouveau avec le code complet
 import streamlit as st
 import pandas as pd
