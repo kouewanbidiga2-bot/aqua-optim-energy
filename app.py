@@ -151,6 +151,8 @@ def show_dashboard():
     
     with col2:
         st.subheader('💧 Demande en Eau')
+        hours = list(range(24))
+        energy_consumption = [85, 80, 75, 70, 65, 70, 90, 110, 125, 120, 115, 110, 105, 100, 105, 110, 115, 120, 125, 120, 110, 100, 90, 85]
         water_demand = [c * 0.8 for c in energy_consumption]
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hours, y=water_demand, mode='lines', name='Demande', line=dict(color='blue')))
