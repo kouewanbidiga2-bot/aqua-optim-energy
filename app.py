@@ -115,12 +115,39 @@ def show_dashboard():
     col1, col2 = st.columns(2)
     with col1:
         st.subheader('📈 Consommation Énergétique')
-        hours = list(range(24))
-        energy_consumption = [85, 80, 75, 70, 65, 70, 90, 110, 125, 120, 115, 110, 105, 100, 105, 110, 115, 120, 125, 120, 110, 100, 90, 85]
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=hours, y=energy_consumption, mode='lines', name='Consommation'))
-        fig.update_layout(height=300, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        try:
+            df = pd.read_csv('elecdom-courbes-horaire.csv')
+            
+            # 1. Sélectionner une période (exemple : la première)
+            periode_choisie = df['periode'].unique()[0]
+            df_filtre = df[df['periode'] == periode_choisie]
+            
+            # 2. Extraction des données
+            heures = df_filtre['tranche_horaire']
+            valeurs_brutes = df_filtre['consommation_Wh']
+            
+            # 3. CONVERSION D'UNITÉ (Le coefficient multiplicateur)
+            # On normalise : on divise par la valeur max pour avoir un ratio (0 à 1)
+            # Puis on multiplie par votre débit max théorique (ex: 15 m3/h)
+            coefficient_conversion = 15 / valeurs_brutes.max()
+            valeurs_hydrauliques = valeurs_brutes * coefficient_conversion
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=heures, y=valeurs_hydrauliques, mode='lines', name='Consommation'))
+            fig.update_layout(height=300, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+            
+            st.success(f"✅ Données converties (Base : {periode_choisie})")
+            
+        except Exception as e:
+            st.error(f"Erreur : {e}")
+            # Code de secours avec données simulées
+            hours = list(range(24))
+            energy_consumption = [85, 80, 75, 70, 65, 70, 90, 110, 125, 120, 115, 110, 105, 100, 105, 110, 115, 120, 125, 120, 110, 100, 90, 85]
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=hours, y=energy_consumption, mode='lines', name='Consommation'))
+            fig.update_layout(height=300, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
     
     with col2:
         st.subheader('💧 Demande en Eau')
