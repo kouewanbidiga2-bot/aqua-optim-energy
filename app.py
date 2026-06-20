@@ -71,7 +71,7 @@ def show_realtime():
     
     col1, col2 = st.columns([1, 2])
     
-   with col1:
+ with col1:
         port_input = st.text_input("Port de l'Arduino", value="/dev/ttyACM0")
         
         if st.button("Connecter"):
