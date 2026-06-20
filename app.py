@@ -76,7 +76,7 @@ def show_realtime():
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        port_input = st.text_input("Port de l'Arduino", value="/dev/ttyACM0")
+        port_input = st.text_input("Port de l'Arduino", value="COM3")
 
         if st.button("Connecter"):
             # Si une connexion existe déjà, on la ferme proprement
