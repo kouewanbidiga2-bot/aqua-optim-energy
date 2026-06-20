@@ -31,15 +31,14 @@ def read_arduino_data(ser):
     return None, None
 
 # --- INTERFACE UTILISATEUR ---
-
 def main():
-    st.set_page_config(
-        page_title='AQUA-OPTIM ENERGY',
-        page_icon='🚰',
-        layout='wide'
-    )
+    st.set_page_config(page_title='AQUA-OPTIM ENERGY', page_icon='🚰', layout='wide')
     
-    st.title('🚰 AQUA-OPTIM ENERGY - Système Intelligent ONEA')
+    # On initialise la connexion dans la "mémoire" de Streamlit
+    if 'ser' not in st.session_state:
+        st.session_state.ser = None
+    
+    st.title('🚰 AQUA-OPTIM ENERGY - Système Intelligent')
     st.markdown('### Hackathon ONEA - Boucle de rétroaction et Optimisation')
     
     # Ajout du 5ème onglet pour le Temps Réel
@@ -72,39 +71,47 @@ def show_realtime():
     
     col1, col2 = st.columns([1, 2])
     
-    with col1:
-        # Saisie du port. Sous Windows c'est souvent COM3, COM4. 
-        # Sous Linux/Codespaces/Mac, c'est souvent /dev/ttyACM0 ou /dev/ttyUSB0
+   with col1:
         port_input = st.text_input("Port de l'Arduino", value="/dev/ttyACM0")
-        ser = init_serial(port_input)
         
-        if ser:
-            st.success(f"✅ Connecté sur {port_input}")
-        else:
-            st.error(f"❌ Déconnecté. Vérifiez le port et le câble USB.")
+        if st.button("Connecter"):
+            # Si une connexion existe déjà, on la ferme proprement
+            if st.session_state.ser:
+                st.session_state.ser.close()
             
+            try:
+                st.session_state.ser = serial.Serial(port_input, 9600, timeout=1)
+                st.success(f"✅ Connecté sur {port_input}")
+            except Exception as e:
+                st.error(f"❌ Erreur : {e}")
+
     with col2:
-        st.markdown("### Données en direct")
-        # Un bouton pour forcer la lecture de la ligne
-        if st.button('🔄 Lire les capteurs', type='primary'):
-            if ser:
-                niveau, pompe = read_arduino_data(ser)
-                
-                if niveau is not None:
-                    # Affichage visuel du niveau
-                    st.metric("Niveau d'Eau Actuel", f"{niveau} %")
-                    st.progress(niveau / 100)
-                    
-                    # Affichage visuel de l'état de la pompe
-                    etat = "🟢 Allumée" if pompe == 1 else "🔴 Coupée"
-                    st.metric("État de la Pompe", etat)
-                else:
-                    st.warning("Aucune donnée reçue. La boucle Arduino tourne-t-elle ?")
-            else:
-                st.warning("Veuillez d'abord connecter l'Arduino.")
+        # Ici, on utilise st.session_state.ser au lieu de ser local
+        if st.session_state.ser and st.session_state.ser.is_open:
+            # ... (votre logique de lecture ici)
+            niveau, pompe = read_arduino_data(st.session_state.ser)
+            # ...
+        else:
+            st.warning("Veuillez connecter l'Arduino dans la colonne de gauche.")
 
 def show_dashboard():
     st.header('📊 Tableau de Bord Énergétique')
+    mode = st.radio("Source des données :", ("📈 Données Historiques (CSV)", "📡 Temps Réel (Maquette)"), horizontal=True)
+    
+    if mode == "📡 Temps Réel (Maquette)":
+        if st.session_state.ser and st.session_state.ser.is_open:
+            # On lit les données de l'Arduino
+            niveau, pompe = read_arduino_data(st.session_state.ser)
+            if niveau is not None:
+                st.metric("Niveau d'eau (Réel)", f"{niveau} %")
+                # Ici, vous pouvez ajouter un graphique qui se met à jour 
+                # avec la valeur 'niveau' en temps réel
+            else:
+                st.warning("En attente de données de la maquette...")
+        else:
+            st.error("Maquette non connectée ! Allez dans l'onglet '📡 Temps Réel' pour connecter.")
+            
+    else:
     
     col1, col2, col3, col4 = st.columns(4)
     with col1: st.metric('Économies Potentielles', '25%', '+25%', delta_color='inverse')
@@ -171,16 +178,42 @@ def show_prediction():
 
 def show_optimization():
     st.header('⚡ Optimisation Énergétique')
-    col1, col2 = st.columns(2)
-    with col1: peak_price = st.number_input('Prix heure pleine (FCFA/kWh)', value=85)
-    with col2: off_peak_price = st.number_input('Prix heure creuse (FCFA/kWh)', value=45)
-    if st.button('🔄 Calculer l\'Optimisation', type='primary'):
-        st.success("Optimisation tarifaire calculée.")
+    
+    # ... (vos calculs) ...
+    
+    if st.button('🚀 Lancer le pompage optimisé'):
+        # On vérifie si la connexion globale existe
+        if st.session_state.ser and st.session_state.ser.is_open:
+            st.session_state.ser.write(b'1')  # Envoi de l'ordre
+            st.success("Ordre envoyé à la maquette !")
+        else:
+            st.error("Arduino non connecté ! Allez dans l'onglet '📡 Temps Réel' d'abord.")
 
 def show_sentinel():
-    st.header('⚠️ Sentinel Énergétique')
-    st.error('Détection d\'Anomalies : surveille les équipements.')
-    st.warning('**PMP_004** - Efficacité critique (45%) - Maintenance urgente')
+    st.header('⚠️ Sentinel Énergétique & Sécurité')
+    
+    # Simulation d'une lecture de statut venant de l'Arduino (ex: via une variable globale)
+    # Dans un vrai projet, ces données viendraient de la fonction 'read_arduino_data'
+    niveau_critique = True # Imaginons que le capteur envoie cela
+    
+    if niveau_critique:
+        st.error("🚨 ALERTE : Niveau d'eau critique détecté (< 20%)")
+        
+        # Bouton d'action d'urgence
+        if st.button('🛑 COUPER URGENCE POMPE', type='primary'):
+            # Envoi de l'ordre '0' (Arrêt) à l'Arduino
+            try:
+                # ser.write(b'0') # Décommentez quand vous aurez le matériel
+                st.success("✅ Ordre d'arrêt d'urgence envoyé avec succès !")
+                st.balloons() # Effet visuel pour valider l'action
+            except:
+                st.error("Impossible de joindre la maquette.")
+                
+        # Bouton de réinitialisation
+        if st.button('🔧 Acquitter l\'alerte'):
+            st.info("Alerte acquittée. Surveillance reprise.")
+    else:
+        st.success("✅ Système sous contrôle. Aucune anomalie détectée.")
 
 if __name__ == '__main__':
     main()
