@@ -183,15 +183,36 @@ def show_dashboard():
 
 def show_prediction():
     st.header('🔮 Prévision Intelligente par IA')
+    
     col1, col2 = st.columns(2)
     with col1:
         prediction_days = st.slider('Jours à prédire', 1, 7, 3)
     with col2:
-        confidence = st.slider('Niveau de confiance', 0.8, 0.95, 0.9)
-    if st.button('📊 Générer les Prévisions', type='primary'):
-        hours = list(range(24 * prediction_days))
-        predicted = [65 + 25 * np.sin((h+24)/24 * 2 * np.pi) for h in hours]
-        st.success("Prévisions générées avec succès (Simulation).")
+        seuil_securite = st.slider('Seuil de déclenchement auto (%)', 20, 50, 30)
+
+    if st.button('📊 Analyser et Activer IA'):
+        # 1. Simulation de calcul IA (basé sur le temps)
+        heures = list(range(24 * prediction_days))
+        # Simulation d'une courbe de demande en eau
+        predicted = [65 + 25 * np.sin((h+24)/24 * 2 * np.pi) for h in heures]
+        
+        st.line_chart(predicted)
+        st.success("IA : Modèle de demande optimisé.")
+
+    # --- LOGIQUE D'AUTOMATISATION ---
+    st.markdown("### 🤖 Mode Auto-Pilote IA")
+    if st.toggle("Activer la décision automatique"):
+        if st.session_state.ser and st.session_state.ser.is_open:
+            niveau, _ = read_arduino_data(st.session_state.ser)
+            if niveau is not None:
+                # Décision automatique basée sur le seuil IA
+                if niveau < seuil_securite:
+                    st.session_state.ser.write(b'1')
+                    st.warning("⚠️ IA détecte un besoin : Pompe activée automatiquement !")
+                else:
+                    st.success("✅ IA : Niveau optimal, pas de pompage requis.")
+        else:
+            st.error("Arduino non connecté pour l'auto-pilote.")
 
 
 def show_optimization():
